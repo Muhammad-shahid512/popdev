@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Machine - AI Powered</title>
+
+<style>
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    padding: 30px; 
+    background-color: #f4f7f9; 
+}
+
+.container { 
+    max-width: 1100px; 
+    margin: auto; 
+    background: white; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+}
+
+h2 { text-align: center; color: #007bff; }
+
+.form-row { 
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+    justify-content: center;
+}
+
+input, select, button { 
+    padding: 12px; 
+    border-radius: 6px; 
+    border: 1px solid #ddd; 
+}
+
+button { 
+    background: #007bff; 
+    color: white; 
+    cursor: pointer; 
+}
+
+button:disabled { background: #ccc; }
+
+#status { 
+    text-align: center; 
+    margin: 20px 0; 
+    padding: 10px;
+}
+
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 12px; border-bottom: 1px solid #eee; }
+th { background: #007bff; color: white; }
+
+.email-tag { 
+    background: #e1f7e6; 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+}
+
+.link-btn { color: #007bff; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Lead Machine 🚀</h2>
+
+<form id="leadForm">
+<div class="form-row">
+<input type="text" id="businessType" placeholder="Business Type" required>
+<input type="text" id="location" placeholder="Location" required>
+<input type="number" id="leadNumber" placeholder="Leads" min="1" max="50" required>
+
+<select id="emailStyle">
+<option>Professional</option>
+<option>Friendly</option>
+<option>Simple</option>
+</select>
+
+<button type="submit" id="submitBtn">Get Leads 🚀</button>
+</div>
+</form>
+
+<div id="status">Ready...</div>
+
+<table>
+<thead>
+<tr>
+<th>Organization</th>
+<th>Website</th>
+<th>Email</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<script>
+const tableBody = document.getElementById("tableBody");
+const statusDiv = document.getElementById("status");
+const btn = document.getElementById("submitBtn");
+
+document.getElementById("leadForm").addEventListener("submit", async (e) => {
+e.preventDefault();
+
+tableBody.innerHTML = "";
+statusDiv.innerText = "⏳ Loading...";
+btn.disabled = true;
+
+const payload = {
+"Business Type": document.getElementById("businessType").value,
+"Location": document.getElementById("location").value,
+"Lead Number": parseInt(document.getElementById("leadNumber").value),
+"Email Style": document.getElementById("emailStyle").value
+};
+
+try {
+
+// ✅ IMPORTANT CHANGE HERE
+const res = await fetch("https://crshahid.app.n8n.cloud/webhook-test/lead-generation", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(payload)
+});
+
+const data = await res.json();
+console.log(data);
+
+// ✅ handle all response types
+let leads = [];
+
+if (Array.isArray(data)) {
+leads = data;
+} else if (data.data) {
+leads = data.data;
+} else {
+leads = [data];
+}
+
+if (leads.length === 0) {
+statusDiv.innerText = "⚠️ No leads found";
+return;
+}
+
+// ✅ render rows
+leads.forEach(item => {
+
+const email = item.Email || "";
+const website = item.Website || "#";
+
+const row = document.createElement("tr");
+
+row.innerHTML = `
+<td>${item.Organization || "N/A"}</td>
+<td>${website !== "#" ? `<a href="${website}" target="_blank">Visit</a>` : "N/A"}</td>
+<td><span class="email-tag">${email || "Not Found"}</span></td>
+<td>
+${email ? `<a href="mailto:${email}"><button>Mail</button></a>` : "-"}
+</td>
+`;
+
+tableBody.appendChild(row);
+});
+
+statusDiv.innerText = `✅ ${leads.length} Leads Loaded`;
+
+} catch (err) {
+console.error(err);
+statusDiv.innerText = "❌ Error fetching data";
+}
+
+btn.disabled = false;
+});
+</script>
+
+</body>
+</html>
